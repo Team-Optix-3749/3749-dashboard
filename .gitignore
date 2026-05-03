@@ -1,5 +1,6 @@
 # dependencies
 /node_modules
+/tanstack-start/node_modules
 /.pnp
 .pnp.js
 
@@ -39,4 +40,5 @@ yarn-error.log*
 
 # Prisma
 .env
+/tanstack-start/.env
 prisma/.env*

@@ -3,12 +3,13 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
-    "lint": "next lint",
+    "dev": "npm --prefix tanstack-start run dev",
+    "build": "npm --prefix tanstack-start run build",
+    "start": "npm --prefix tanstack-start run start",
+    "lint": "echo 'Use tanstack-start lint/tooling in this migration baseline'",
     "prisma:generate": "prisma generate",
-    "prisma:migrate": "prisma migrate dev"
+    "prisma:migrate": "prisma migrate dev",
+    "tanstack:install": "npm --prefix tanstack-start install"
   },
   "dependencies": {
     "next": "14.0.4",
