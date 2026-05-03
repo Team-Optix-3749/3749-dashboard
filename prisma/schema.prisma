@@ -1,0 +1,392 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+  @@unique([identifier, token])
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String?   @unique
+  emailVerified DateTime?
+  image         String?
+  isVerified    Boolean   @default(false)
+  joinedAt      DateTime  @default(now())
+  accounts      Account[]
+  sessions      Session[]
+
+  role          RoleType  @default(PENDING)
+  specialPerms  SpecialPerm[]
+
+  grade         String?
+  phone         String?
+  subteam       String?
+  bio           String?
+
+  opiSubmissions   OpiSubmission[]  @relation("submitter")
+  opiEventMembers  OpiEventMember[]
+
+  buildHourSessions BuildHourSession[]
+  totalBuildMinutes Int @default(0)
+
+  expenseReports ExpenseReport[]
+
+  eventAttendees CalendarEventAttendee[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+enum RoleType {
+  OWNER
+  OFFICER
+  LEADERSHIP
+  MEMBER
+  PENDING
+}
+
+model SpecialPerm {
+  id        String   @id @default(cuid())
+  userId    String
+  name      SpecialPermType
+  grantedBy String
+  grantedAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@unique([userId, name])
+}
+
+enum SpecialPermType {
+  OPI_PERMS
+  BUILD_PERMS
+  FINANCE_PERMS
+  SPONSOR_PERMS
+  SCHEDULE_PERMS
+}
+
+model OpiSubmission {
+  id            String   @id @default(cuid())
+  submitterId   String
+  submitter     User     @relation("submitter", fields: [submitterId], references: [id])
+  title         String
+  description   String   @db.Text
+  category      OpiCategory
+  proposedDate  DateTime?
+  status        OpiStatus @default(PENDING)
+  reviewedBy    String?
+  reviewedAt    DateTime?
+  reviewNote    String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  opiEvent      OpiEvent?
+}
+
+enum OpiCategory {
+  OUTREACH
+  COMMUNITY_SERVICE
+  STEM_EDUCATION
+  FUNDRAISING
+  TEAM_BUILDING
+  COMPETITION_PREP
+  OTHER
+}
+
+enum OpiStatus {
+  PENDING
+  IN_REVIEW
+  APPROVED
+  EXECUTED
+  REJECTED
+}
+
+model OpiEvent {
+  id            String   @id @default(cuid())
+  submissionId  String   @unique
+  submission    OpiSubmission @relation(fields: [submissionId], references: [id])
+  name          String
+  date          DateTime
+  location      String?
+  description   String?  @db.Text
+  createdBy     String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  members       OpiEventMember[]
+}
+
+model OpiEventMember {
+  id          String   @id @default(cuid())
+  opiEventId  String
+  opiEvent    OpiEvent @relation(fields: [opiEventId], references: [id], onDelete: Cascade)
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role        OpiMemberRole
+  minutesLogged Int @default(0)
+
+  @@unique([opiEventId, userId])
+}
+
+enum OpiMemberRole {
+  PLANNER
+  ATTENDEE
+}
+
+model BuildZone {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  latitude    Float
+  longitude   Float
+  radiusMeters Int
+  isActive    Boolean @default(true)
+  createdBy   String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  sessions    BuildHourSession[]
+}
+
+model BuildHourSession {
+  id          String    @id @default(cuid())
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  zoneId      String
+  zone        BuildZone @relation(fields: [zoneId], references: [id])
+  startedAt   DateTime
+  endedAt     DateTime?
+  durationMinutes Int?
+  isActive    Boolean   @default(true)
+  autoEnded   Boolean   @default(false)
+
+  createdAt   DateTime  @default(now())
+}
+
+model Budget {
+  id           String   @id @default(cuid())
+  seasonYear   String
+  totalBudget  Float
+  notes        String?  @db.Text
+  createdBy    String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  categories   BudgetCategory[]
+  transactions Transaction[]
+}
+
+model BudgetCategory {
+  id          String   @id @default(cuid())
+  budgetId    String
+  budget      Budget   @relation(fields: [budgetId], references: [id], onDelete: Cascade)
+  name        String
+  allocated   Float
+  color       String
+  transactions Transaction[]
+}
+
+model Transaction {
+  id           String   @id @default(cuid())
+  budgetId     String
+  budget       Budget   @relation(fields: [budgetId], references: [id])
+  categoryId   String?
+  category     BudgetCategory? @relation(fields: [categoryId], references: [id])
+  type         TransactionType
+  amount       Float
+  description  String
+  vendor       String?
+  receiptUrl   String?
+  date         DateTime
+  createdBy    String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+enum TransactionType {
+  INCOME
+  EXPENSE
+  GRANT
+  REFUND
+}
+
+model ExpenseReport {
+  id          String   @id @default(cuid())
+  submitterId String
+  submitter   User     @relation(fields: [submitterId], references: [id])
+  amount      Float
+  description String
+  receiptUrl  String?
+  status      ExpenseStatus @default(PENDING)
+  reviewedBy  String?
+  reviewedAt  DateTime?
+  createdAt   DateTime @default(now())
+}
+
+enum ExpenseStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  REIMBURSED
+}
+
+model Sponsor {
+  id              String   @id @default(cuid())
+  name            String
+  category        String
+  sponsorType     String
+  contactName     String?
+  email           String?
+  phone           String?
+  website         String?
+  applyUrl        String?
+  estimatedAmount String?
+  eligibilityNotes String? @db.Text
+  isFrcSpecific   Boolean  @default(false)
+  isSdLocal       Boolean  @default(false)
+  deadline        String?
+  status          SponsorStatus @default(NOT_APPLIED)
+  priorityLevel   SponsorPriority @default(MEDIUM)
+  dateContacted   DateTime?
+  responseReceived Boolean @default(false)
+  notes           String?  @db.Text
+  hasMentorConnection Boolean @default(false)
+  logoOnRobot     Boolean @default(false)
+  nextAction      String?
+  updatedBy       String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @default(now())
+}
+
+enum SponsorStatus {
+  NOT_APPLIED
+  IN_PROGRESS
+  APPLIED
+  RESPONDED
+  CONFIRMED
+  DECLINED
+  ON_HOLD
+}
+
+enum SponsorPriority {
+  CRITICAL
+  HIGH
+  MEDIUM
+  LOW
+}
+
+model CalendarEvent {
+  id          String   @id @default(cuid())
+  title       String
+  description String?  @db.Text
+  startDate   DateTime
+  endDate     DateTime?
+  allDay      Boolean  @default(false)
+  location    String?
+  type        EventType
+  visibleTo   RoleType[]
+  createdBy   String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  attendees   CalendarEventAttendee[]
+}
+
+enum EventType {
+  COMPETITION
+  BUILD_SESSION
+  OUTREACH
+  MEETING
+  LEADERSHIP_MEETING
+  FUNDRAISER
+  DEADLINE
+  SPONSOR_MEETING
+  OTHER
+}
+
+model CalendarEventAttendee {
+  id      String @id @default(cuid())
+  eventId String
+  event   CalendarEvent @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  userId  String
+  user    User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  rsvp    RsvpStatus @default(PENDING)
+  @@unique([eventId, userId])
+}
+
+enum RsvpStatus {
+  PENDING
+  ATTENDING
+  NOT_ATTENDING
+  MAYBE
+}
+
+model Competition {
+  id          String   @id @default(cuid())
+  name        String
+  type        CompType
+  location    String
+  address     String?
+  startDate   DateTime
+  endDate     DateTime
+  tbaKey      String?
+  hotelInfo   String?  @db.Text
+  transportInfo String? @db.Text
+  notes       String?  @db.Text
+  rosterAssignments CompRosterMember[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+enum CompType {
+  REGIONAL
+  DISTRICT
+  DISTRICT_CHAMPIONSHIP
+  STATE_CHAMPIONSHIP
+  WORLD_CHAMPIONSHIP
+  OFFSEASON
+}
+
+model CompRosterMember {
+  id            String      @id @default(cuid())
+  competitionId String
+  competition   Competition @relation(fields: [competitionId], references: [id], onDelete: Cascade)
+  userId        String
+  role          String
+  assignedBy    String
+  @@unique([competitionId, userId])
+}
