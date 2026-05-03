@@ -17,6 +17,11 @@ import { getSupabaseServerClient } from '../utils/supabase'
 
 const fetchUser = createServerFn({ method: 'GET' }).handler(async () => {
   const supabase = getSupabaseServerClient()
+
+  if (!supabase) {
+    return null
+  }
+
   const { data, error: _error } = await supabase.auth.getUser()
 
   if (!data.user?.email) {
@@ -30,10 +35,16 @@ const fetchUser = createServerFn({ method: 'GET' }).handler(async () => {
 
 export const Route = createRootRoute({
   beforeLoad: async () => {
-    const user = await fetchUser()
+    try {
+      const user = await fetchUser()
 
-    return {
-      user,
+      return {
+        user,
+      }
+    } catch {
+      return {
+        user: null,
+      }
     }
   },
   head: () => ({
@@ -54,31 +65,18 @@ export const Route = createRootRoute({
     links: [
       { rel: 'stylesheet', href: appCss },
       {
-        rel: 'apple-touch-icon',
-        sizes: '180x180',
-        href: '/apple-touch-icon.png',
-      },
-      {
         rel: 'icon',
-        type: 'image/png',
-        sizes: '32x32',
-        href: '/favicon-32x32.png',
+        type: 'image/svg+xml',
+        href: '/favicon.svg',
       },
-      {
-        rel: 'icon',
-        type: 'image/png',
-        sizes: '16x16',
-        href: '/favicon-16x16.png',
-      },
-      { rel: 'manifest', href: '/site.webmanifest', color: '#fffff' },
-      { rel: 'icon', href: '/favicon.ico' },
+      { rel: 'manifest', href: '/site.webmanifest' },
     ],
   }),
   errorComponent: (props) => {
     return (
-      <RootDocument>
+      <ErrorDocument>
         <DefaultCatchBoundary {...props} />
-      </RootDocument>
+      </ErrorDocument>
     )
   },
   notFoundComponent: () => <NotFound />,
@@ -86,16 +84,22 @@ export const Route = createRootRoute({
 })
 
 function RootComponent() {
+  const { user } = Route.useRouteContext()
+
   return (
-    <RootDocument>
+    <AppShell user={user}>
       <Outlet />
-    </RootDocument>
+    </AppShell>
   )
 }
 
-function RootDocument({ children }: { children: React.ReactNode }) {
-  const { user } = Route.useRouteContext()
-
+function AppShell({
+  children,
+  user,
+}: {
+  children: React.ReactNode
+  user: { email: string } | null
+}) {
   return (
     <html>
       <head>
@@ -153,9 +157,53 @@ function RootDocument({ children }: { children: React.ReactNode }) {
                 <Link to="/logout">Logout</Link>
               </>
             ) : (
-              <Link to="/login">Login</Link>
+              <>
+                <Link
+                  to="/signup"
+                  search={{ redirect: undefined }}
+                  className="mr-3"
+                >
+                  Sign up
+                </Link>
+                <Link to="/login" search={{ redirect: undefined }}>
+                  Login
+                </Link>
+              </>
             )}
           </div>
+        </div>
+        <hr />
+        {children}
+        <TanStackRouterDevtools position="bottom-right" />
+        <Scripts />
+      </body>
+    </html>
+  )
+}
+
+function ErrorDocument({ children }: { children: React.ReactNode }) {
+  return (
+    <html>
+      <head>
+        <HeadContent />
+      </head>
+      <body>
+        <div className="p-2 flex flex-wrap gap-2 text-sm">
+          <Link
+            to="/"
+            activeProps={{
+              className: 'font-bold',
+            }}
+            activeOptions={{ exact: true }}
+          >
+            Home
+          </Link>
+          <Link to="/signup" search={{ redirect: undefined }}>
+            Sign up
+          </Link>
+          <Link to="/login" search={{ redirect: undefined }}>
+            Login
+          </Link>
         </div>
         <hr />
         {children}

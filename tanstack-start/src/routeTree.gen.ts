@@ -14,6 +14,7 @@ import { Route as LogoutRouteImport } from './routes/logout'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as AuthedRouteImport } from './routes/_authed'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
 import { Route as AuthedSponsorsRouteImport } from './routes/_authed/sponsors'
 import { Route as AuthedSettingsRouteImport } from './routes/_authed/settings'
 import { Route as AuthedScheduleRouteImport } from './routes/_authed/schedule'
@@ -50,6 +51,11 @@ const AuthedRoute = AuthedRouteImport.update({
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthCallbackRoute = AuthCallbackRouteImport.update({
+  id: '/auth/callback',
+  path: '/auth/callback',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthedSponsorsRoute = AuthedSponsorsRouteImport.update({
@@ -134,6 +140,7 @@ export interface FileRoutesByFullPath {
   '/schedule': typeof AuthedScheduleRoute
   '/settings': typeof AuthedSettingsRoute
   '/sponsors': typeof AuthedSponsorsRoute
+  '/auth/callback': typeof AuthCallbackRoute
   '/posts/$postId': typeof AuthedPostsPostIdRoute
   '/posts/': typeof AuthedPostsIndexRoute
 }
@@ -152,6 +159,7 @@ export interface FileRoutesByTo {
   '/schedule': typeof AuthedScheduleRoute
   '/settings': typeof AuthedSettingsRoute
   '/sponsors': typeof AuthedSponsorsRoute
+  '/auth/callback': typeof AuthCallbackRoute
   '/posts/$postId': typeof AuthedPostsPostIdRoute
   '/posts': typeof AuthedPostsIndexRoute
 }
@@ -173,6 +181,7 @@ export interface FileRoutesById {
   '/_authed/schedule': typeof AuthedScheduleRoute
   '/_authed/settings': typeof AuthedSettingsRoute
   '/_authed/sponsors': typeof AuthedSponsorsRoute
+  '/auth/callback': typeof AuthCallbackRoute
   '/_authed/posts/$postId': typeof AuthedPostsPostIdRoute
   '/_authed/posts/': typeof AuthedPostsIndexRoute
 }
@@ -194,6 +203,7 @@ export interface FileRouteTypes {
     | '/schedule'
     | '/settings'
     | '/sponsors'
+    | '/auth/callback'
     | '/posts/$postId'
     | '/posts/'
   fileRoutesByTo: FileRoutesByTo
@@ -212,6 +222,7 @@ export interface FileRouteTypes {
     | '/schedule'
     | '/settings'
     | '/sponsors'
+    | '/auth/callback'
     | '/posts/$postId'
     | '/posts'
   id:
@@ -232,6 +243,7 @@ export interface FileRouteTypes {
     | '/_authed/schedule'
     | '/_authed/settings'
     | '/_authed/sponsors'
+    | '/auth/callback'
     | '/_authed/posts/$postId'
     | '/_authed/posts/'
   fileRoutesById: FileRoutesById
@@ -242,6 +254,7 @@ export interface RootRouteChildren {
   LoginRoute: typeof LoginRoute
   LogoutRoute: typeof LogoutRoute
   SignupRoute: typeof SignupRoute
+  AuthCallbackRoute: typeof AuthCallbackRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -279,6 +292,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth/callback': {
+      id: '/auth/callback'
+      path: '/auth/callback'
+      fullPath: '/auth/callback'
+      preLoaderRoute: typeof AuthCallbackRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authed/sponsors': {
@@ -426,6 +446,7 @@ const rootRouteChildren: RootRouteChildren = {
   LoginRoute: LoginRoute,
   LogoutRoute: LogoutRoute,
   SignupRoute: SignupRoute,
+  AuthCallbackRoute: AuthCallbackRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

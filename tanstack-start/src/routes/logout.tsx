@@ -4,6 +4,13 @@ import { getSupabaseServerClient } from '../utils/supabase'
 
 const logoutFn = createServerFn().handler(async () => {
   const supabase = getSupabaseServerClient()
+
+  if (!supabase) {
+    throw redirect({
+      href: '/',
+    })
+  }
+
   const { error } = await supabase.auth.signOut()
 
   if (error) {
