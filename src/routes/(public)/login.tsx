@@ -145,9 +145,7 @@ function LoginForm({
                 <OAuthButtons />
               </Suspense>
             </Field>
-            <FieldSeparator className="*:data-[slot=field-separator-content]:bg-card">
-              Or sign in with email
-            </FieldSeparator>
+            <FieldSeparator />
             <Field data-invalid={!!errors.email}>
               <FieldLabel htmlFor="email">Email</FieldLabel>
               <FieldContent>

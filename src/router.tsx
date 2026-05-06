@@ -5,7 +5,8 @@ import {
   Navigate,
   Outlet,
 } from "@tanstack/react-router";
-import { getSession } from "@/lib/auth/supabase-browser";
+import { useEffect } from "react";
+import { getSession, syncUserStoreWithAuth } from "@/lib/auth/supabase-browser";
 import { useDarkMode } from "@/lib/hooks/useDarkMode";
 import { LoginPage } from "@/routes/(public)/login";
 import { AuthedLayout } from "@/routes/(authed)/_authed";
@@ -14,6 +15,12 @@ import { NotFoundPage } from "@/routes/not-found";
 import { Navbar } from "./components/Navbar";
 
 function AppShell() {
+  useDarkMode();
+
+  useEffect(() => {
+    return syncUserStoreWithAuth();
+  }, []);
+
   return (
     <div className="min-h-dvh bg-background text-foreground">
       <Navbar />

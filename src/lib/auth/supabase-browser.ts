@@ -22,18 +22,11 @@ export function watchSessionChange(onChange: (session: Session | null) => void) 
   return () => subscription.unsubscribe();
 }
 
-export async function hydrateUserStore() {
-  const session = await getSession();
-  useUserStore.getState().setSession(session);
-  return session;
+export function syncUserStoreWithAuth() {
+  const { setSession } = useUserStore.getState();
+
+  void getSession().then(setSession);
+  return watchSessionChange(setSession);
 }
 
-export function syncUserStore() {
-  const {
-    data: { subscription },
-  } = supabase.auth.onAuthStateChange((_event, session) => {
-    useUserStore.getState().setSession(session);
-  });
 
-  return () => subscription.unsubscribe();
-}
