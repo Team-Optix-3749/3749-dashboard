@@ -1,10 +1,11 @@
-import { createClient, type Session } from "@supabase/supabase-js";
+import { createBrowserClient } from "@supabase/ssr";
+import type { Provider, Session } from "@supabase/supabase-js";
 import { useUserStore } from "./user-store";
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string;
-const supabaseKey = import.meta.env.VITE_SUPABASE_KEY as string;
+const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string;
 
-export const supabase = createClient(supabaseUrl, supabaseKey);
+export const supabase = createBrowserClient(supabaseUrl, supabaseKey);
 
 export async function getSession(): Promise<Session | null> {
   const { data, error } = await supabase.auth.getSession();
@@ -29,4 +30,13 @@ export function syncUserStoreWithAuth() {
   return watchSessionChange(setSession);
 }
 
+export async function signInWithOAuth(provider: Provider, redirectTo?: string) {
+  const { error } = await supabase.auth.signInWithOAuth({
+    provider,
+    options: {
+      redirectTo: redirectTo ?? window.location.origin,
+    },
+  });
 
+  return { error };
+}

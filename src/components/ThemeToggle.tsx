@@ -1,6 +1,6 @@
 import { useDarkMode } from "../lib/hooks/useDarkMode";
 
-import { Button } from "./ui/button";
+import { Button } from "@heroui/react";
 import { Moon, Sun } from "lucide-react";
 
 const LIGHT_SYMBOL = <Sun className="size-5" />;
@@ -11,11 +11,12 @@ export default function ThemeToggle({}) {
 
   return (
     <Button
-      variant={"ghost"}
-      disabled={!isMounted}
-      onClick={toggle}
-      size="icon"
-      className="size-9"
+      isDisabled={!isMounted}
+      isIconOnly
+      onPress={toggle}
+      size="sm"
+      variant="ghost"
+      aria-label="Toggle theme"
     >
       {isDark ? LIGHT_SYMBOL : DARK_SYMBOL}
     </Button>

@@ -7,6 +7,7 @@ function applyTheme(theme: ThemeMode) {
   localStorage.theme = theme;
   document.documentElement.classList.add(theme);
   document.documentElement.classList.remove(theme === "dark" ? "light" : "dark");
+  document.documentElement.dataset.theme = theme;
 }
 
 export function useDarkMode() {
@@ -18,7 +19,7 @@ export function useDarkMode() {
 
     const storedTheme = localStorage.theme as ThemeMode | undefined;
     const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-    const theme = storedTheme || (prefersDark ? "dark" : "light");
+    const theme = storedTheme ?? (prefersDark ? "dark" : "light");
 
     applyTheme(theme);
     setIsDark(theme === "dark");
@@ -26,9 +27,8 @@ export function useDarkMode() {
 
   const toggle = useCallback(() => {
     if (!isMounted) return;
-
     setIsDark((current) => {
-      const nextTheme = current ? "light" : "dark";
+      const nextTheme: ThemeMode = current ? "light" : "dark";
       applyTheme(nextTheme);
       return nextTheme === "dark";
     });

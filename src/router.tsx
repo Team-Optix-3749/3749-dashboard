@@ -8,26 +8,13 @@ import {
 import { useEffect } from "react";
 import { getSession, syncUserStoreWithAuth } from "@/lib/auth/supabase-browser";
 import { useDarkMode } from "@/lib/hooks/useDarkMode";
+import { useUserStore } from "@/lib/auth/user-store";
+import { Navbar } from "@/components/Navbar";
+import { LandingPage } from "@/routes/(public)/index";
 import { LoginPage } from "@/routes/(public)/login";
+import { SignupPage } from "@/routes/(public)/signup";
 import { AuthedLayout } from "@/routes/(authed)/_authed";
-import { DashboardPage } from "@/routes/(authed)/dashboard";
 import { NotFoundPage } from "@/routes/not-found";
-import { Navbar } from "./components/Navbar";
-
-function AppShell() {
-  useDarkMode();
-
-  useEffect(() => {
-    return syncUserStoreWithAuth();
-  }, []);
-
-  return (
-    <div className="min-h-dvh bg-background text-foreground">
-      <Navbar />
-      <Outlet />
-    </div>
-  );
-}
 
 const rootRoute = createRootRoute({
   component: AppShell,
@@ -37,13 +24,19 @@ const rootRoute = createRootRoute({
 const indexRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/",
-  component: () => <Navigate to="/dashboard" />,
+  component: LandingPage,
 });
 
 const loginRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/login",
   component: LoginPage,
+});
+
+const signupRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/signup",
+  component: SignupPage,
 });
 
 const authedRoute = createRoute({
@@ -60,16 +53,11 @@ const authedRoute = createRoute({
   component: AuthedLayout,
 });
 
-const dashboardRoute = createRoute({
-  getParentRoute: () => authedRoute,
-  path: "/dashboard",
-  component: DashboardPage,
-});
-
 const routeTree = rootRoute.addChildren([
   indexRoute,
   loginRoute,
-  authedRoute.addChildren([dashboardRoute]),
+  signupRoute,
+  authedRoute.addChildren([]),
 ]);
 
 export const router = createRouter({ routeTree });
@@ -78,4 +66,22 @@ declare module "@tanstack/react-router" {
   interface Register {
     router: typeof router;
   }
+}
+
+function AppShell() {
+  useDarkMode();
+
+  const setSession = useUserStore((state) => state.setSession);
+
+  useEffect(() => {
+    void getSession().then((session) => setSession(session));
+    return syncUserStoreWithAuth();
+  }, [setSession]);
+
+  return (
+    <div className="min-h-dvh bg-background text-foreground">
+      <Navbar />
+      <Outlet />
+    </div>
+  );
 }
