@@ -2,63 +2,54 @@ import {
   createRootRoute,
   createRoute,
   createRouter,
+  Link,
   Navigate,
   Outlet,
 } from "@tanstack/react-router";
 import { useEffect } from "react";
-import { getSession, syncUserStoreWithAuth } from "@/lib/auth/supabase-browser";
+import { getSession, syncUserStoreWithAuth, validateAuth } from "@/lib/auth/utils";
 import { useDarkMode } from "@/lib/hooks/useDarkMode";
 import { useUserStore } from "@/lib/auth/user-store";
-import { Navbar } from "@/components/Navbar";
-import { LandingPage } from "@/routes/(public)/index";
-import { LoginPage } from "@/routes/(public)/login";
-import { SignupPage } from "@/routes/(public)/signup";
+// import { Navbar } from "@/components/";
+import { AuthPage } from "@/routes/(public)/auth";
 import { AuthedLayout } from "@/routes/(authed)/_authed";
 import { NotFoundPage } from "@/routes/not-found";
+import Dashboard from "./routes/(authed)/dashboard";
+import { Button } from "@heroui/react";
+import { Car } from "lucide-react";
+import { Navbar } from "./components/Navbar";
 
 const rootRoute = createRootRoute({
   component: AppShell,
   notFoundComponent: NotFoundPage,
 });
 
-const indexRoute = createRoute({
+const authRoute = createRoute({
   getParentRoute: () => rootRoute,
-  path: "/",
-  component: LandingPage,
-});
-
-const loginRoute = createRoute({
-  getParentRoute: () => rootRoute,
-  path: "/login",
-  component: LoginPage,
-});
-
-const signupRoute = createRoute({
-  getParentRoute: () => rootRoute,
-  path: "/signup",
-  component: SignupPage,
+  path: "/auth",
+  component: AuthPage,
 });
 
 const authedRoute = createRoute({
   getParentRoute: () => rootRoute,
   id: "(authed)",
   beforeLoad: async () => {
-    const session = await getSession();
-    if (!session) {
+    const isValid = await validateAuth();
+    if (!isValid) {
       throw new Error("UNAUTHORIZED");
     }
-    return { session };
   },
-  errorComponent: () => <Navigate to="/login" />,
+  errorComponent: () => <Navigate to="/auth" />,
   component: AuthedLayout,
 });
 
-const routeTree = rootRoute.addChildren([
-  indexRoute,
-  loginRoute,
-  signupRoute,
-  authedRoute.addChildren([]),
-]);
+const dashboardRoute = createRoute({
+  getParentRoute: () => authedRoute,
+  path: "/dashboard",
+  component: Dashboard,
+});
+
+const routeTree = rootRoute.addChildren([authRoute, authedRoute.addChildren([dashboardRoute])]);
 
 export const router = createRouter({ routeTree });
 
@@ -80,7 +71,13 @@ function AppShell() {
 
   return (
     <div className="min-h-dvh bg-background text-foreground">
-      <Navbar />
+      <Navbar
+        items={[
+          { label: "Features", href: "#features" },
+          { label: "Dashboard", href: "#dashboard" },
+          { label: "Pricing", href: "#pricing" },
+        ]}
+      />
       <Outlet />
     </div>
   );

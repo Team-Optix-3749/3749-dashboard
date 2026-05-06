@@ -29,7 +29,7 @@ export function NotFoundPage() {
           </div>
 
           <div className="flex flex-col gap-3 sm:items-end">
-            <Button onPress={() => navigate({ to: "/" })} variant="secondary">
+            <Button onPress={() => navigate({ to: "/dashboard" })} variant="secondary">
               <HomeIcon className="mr-2" />
               Go to dashboard
             </Button>

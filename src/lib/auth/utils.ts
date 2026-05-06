@@ -40,3 +40,8 @@ export async function signInWithOAuth(provider: Provider, redirectTo?: string) {
 
   return { error };
 }
+
+export async function validateAuth() {
+  const session = await getSession();
+  return !!session;
+}
