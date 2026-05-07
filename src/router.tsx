@@ -7,7 +7,7 @@ import {
   Outlet,
 } from "@tanstack/react-router";
 import { useEffect } from "react";
-import { getSession, syncUserStoreWithAuth, validateAuth } from "@/lib/auth/utils";
+import { getSession, validateAuth, watchSessionChange } from "@/lib/auth/utils";
 import { useDarkMode } from "@/lib/hooks/useDarkMode";
 import { useUserStore } from "@/lib/auth/user-store";
 // import { Navbar } from "@/components/";
@@ -18,6 +18,7 @@ import Dashboard from "./routes/(authed)/dashboard";
 import { Button } from "@heroui/react";
 import { Car } from "lucide-react";
 import { Navbar } from "./components/Navbar";
+import StoreRefresher from "./components/StoreRefresher";
 
 const rootRoute = createRootRoute({
   component: AppShell,
@@ -60,17 +61,9 @@ declare module "@tanstack/react-router" {
 }
 
 function AppShell() {
-  useDarkMode();
-
-  const setSession = useUserStore((state) => state.setSession);
-
-  useEffect(() => {
-    void getSession().then((session) => setSession(session));
-    return syncUserStoreWithAuth();
-  }, [setSession]);
-
   return (
     <div className="min-h-dvh bg-background text-foreground">
+      <StoreRefresher />
       <Navbar
         items={[
           { label: "Features", href: "#features" },
